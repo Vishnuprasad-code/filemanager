@@ -4,9 +4,19 @@ from botocore.exceptions import ClientError
 
 
 class S3Manager():
+
+    def capture_exception(function):
+        def wraper_function(self, **kwargs):
+            try:
+                return function(self, **kwargs)
+            except ClientError as e:
+                return {'message': f'Client Error {e}'}
+        return wraper_function
+
     def __init__(self, s3_client=None):
         self.s3_client = s3_client
 
+    @capture_exception
     def get_client_s3(
         self,
         aws_access_key_id,
@@ -24,6 +34,7 @@ class S3Manager():
         )
         return self.s3_client
 
+    @capture_exception
     def list_paths_s3(self, bucket_name, prefix=""):
         prefix = prefix.strip()
         if prefix:
@@ -33,45 +44,48 @@ class S3Manager():
             prefix = "/".join(prefix.strip('/').split('/')[:-1])
 
         paginator = self.s3_client.get_paginator('list_objects')
-        result = paginator.paginate(
+        pages = paginator.paginate(
             Bucket=bucket_name, Prefix=prefix, Delimiter='/')
         path_list = []
-        for common_prefix_dict in result.search('CommonPrefixes'):
-            if not common_prefix_dict:
-                continue
-            file_name = common_prefix_dict.get('Prefix')
-            if not file_name:
-                continue
-            file_name = file_name.replace(prefix, '')
-            if not file_name:
-                continue
-            folder_path_dict = {
-                'type': "Folder",
-                'fileName': file_name,
-                'sizeInfo': None,
-                'displaySize': None,
-                'lastModified': None
-            }
-            path_list.append(folder_path_dict)
+
+        for result in pages:
+            for common_prefix_dict in (result.get('CommonPrefixes') or []):
+                if not common_prefix_dict:
+                    continue
+                file_name = common_prefix_dict.get('Prefix')
+                if not file_name:
+                    continue
+                file_name = file_name.replace(prefix, '')
+                if not file_name:
+                    continue
+                folder_path_dict = {
+                    'type': "Folder",
+                    'fileName': file_name,
+                    'sizeInfo': None,
+                    'displaySize': None,
+                    'lastModified': None
+                }
+                path_list.append(folder_path_dict)
 
         file_path_list = []
-        for content_dict in result.search('Contents'):
-            if not content_dict:
-                continue
-            file_name = content_dict.get('Key')
-            if not file_name:
-                continue
-            file_name = file_name.replace(prefix, '')
-            if not file_name:
-                continue
-            file_path_dict = {
-                'type': "File",
-                'fileName': file_name,
-                'sizeInfo': content_dict.get('Size'),
-                'displaySize': self.format_bytes(content_dict.get('Size')),
-                'lastModified': content_dict.get('LastModified').strftime('%Y-%m-%dT%H:%M:%S')
-            }
-            file_path_list.append(file_path_dict)
+        for result in pages:
+            for content_dict in (result.get('Contents') or []):
+                if not content_dict:
+                    continue
+                file_name = content_dict.get('Key')
+                if not file_name:
+                    continue
+                file_name = file_name.replace(prefix, '')
+                if not file_name:
+                    continue
+                file_path_dict = {
+                    'type': "File",
+                    'fileName': file_name,
+                    'sizeInfo': content_dict.get('Size'),
+                    'displaySize': self.format_bytes(content_dict.get('Size')),
+                    'lastModified': content_dict.get('LastModified').strftime('%Y-%m-%dT%H:%M:%S')
+                }
+                file_path_list.append(file_path_dict)
 
         path_list.extend(sorted(file_path_list, key=lambda d: d['lastModified'], reverse=True))
         response = {
@@ -80,6 +94,7 @@ class S3Manager():
         }
         return response
 
+    @capture_exception
     def create_presigned_url(self, bucket_name, object_name, expiration=30):
         """Generate a presigned URL to share an S3 object
 
@@ -93,25 +108,21 @@ class S3Manager():
         response = {
             'url': None,
         }
-        try:
-            response['url'] = self.s3_client.generate_presigned_url(
-                'get_object',
-                Params={
-                    'Bucket': bucket_name,
-                    'Key': object_name
-                },
-                ExpiresIn=expiration
-            )
-        except ClientError:
-            response['url'] = None
+        response['url'] = self.s3_client.generate_presigned_url(
+            'get_object',
+            Params={
+                'Bucket': bucket_name,
+                'Key': object_name
+            },
+            ExpiresIn=expiration
+        )
 
         return response
 
+    @capture_exception
     def upload_file_s3(self, bucket_name, file_name, object_name):
-        try:
-            self.s3_client.upload_file(file_name, bucket_name, object_name)
-        except ClientError:
-            pass
+        self.s3_client.upload_file(file_name, bucket_name, object_name)
+        return {'data': 'File Upload Success'}
 
     @staticmethod
     def format_bytes(size):

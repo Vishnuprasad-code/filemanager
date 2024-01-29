@@ -4,6 +4,8 @@ import { ListPanel } from './Components/ListPanel.jsx'
 import { fetchConnectData } from './Http/http.ts'
 import { credentialsObject } from './Types/types.tsx'
 
+import { CredentialsContext } from './Contexts/contexts.tsx'
+
 import "./App.css";
 
 
@@ -32,18 +34,28 @@ function App() {
 
     const url = '/api/s3/connect'
     const resData = await fetchConnectData(url, inputCredentials)
-    console.log(resData)
+    if (resData.error){
+      setConnecting(false);
+      return
+    }
+    
     setCredentials(resData)
   
     setConnecting(false);
   }
 
-  return (
-    <div id="container">
-      <CredentialComponent connecting={connecting} onConnect={handleConnect}/>
+  const credentialCtxValue = {
+    'credentials': credentials
+  }
 
-      { credentials?.bucket_name && <ListPanel credentials={credentials} /> }
-    </div>
+  return (
+    <CredentialsContext.Provider value={credentialCtxValue}>
+      <div id="container">
+        <CredentialComponent connecting={connecting} onConnect={handleConnect}/>
+
+        { credentials?.bucketName && <ListPanel/> }
+      </div>
+    </CredentialsContext.Provider>
   )
 }
 

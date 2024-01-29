@@ -1,26 +1,29 @@
 import { useState } from 'react'
+import { useContext } from 'react';
 
-import { fetchDownloadresponse, fetchUploadresponse } from '../Http/http.js';
-
-import { 
-    FileListingsPropsObject,
-    fileListRowObject,
+import { CredentialsContextType,
+    ListPanelContextType, fileListRowObject,
     uploadObjectType
- } from '../Types/types.tsx'
+} from '../Types/types.tsx'
+ import { CredentialsContext,
+     ListPanelContext
+} from '../Contexts/contexts.tsx'
 
+import { fetchDownloadresponse, fetchUploadresponse } from '../Http/http.ts';
 import { Modal } from './Modal.tsx'
+import { LoadingSpinner } from './LoadingSpinner.tsx'
 
 import "./FileListings.css";
 
-export function FileListings(
-    {   
+export function FileListings(){
+    const { credentials } = useContext<CredentialsContextType>(CredentialsContext);
+    const { 
         searchPath,
         isFetching,
-        bucketName,
         fileList,
         onSearch
-    }: FileListingsPropsObject
-){
+    } = useContext<ListPanelContextType>(ListPanelContext);
+
     const [uploadObject, setUploadObject] = useState<uploadObjectType>({
         isModalOpen: false,
         newFiles: []
@@ -36,9 +39,14 @@ export function FileListings(
         const objectName = searchPath.replace(/^\/+|\/+$/g, '') + '/' + row.fileName
         const responseData = await fetchDownloadresponse(
             '/api/s3/download',
-            bucketName,
+            credentials!.bucketName,
             objectName.replace(/^\/+|\/+$/g, '')
         )
+
+        if (responseData.error){
+            return
+        }
+
         const link = document.createElement('a');
         link.href = responseData.url;
         link.target = '_blank';
@@ -97,18 +105,60 @@ export function FileListings(
         const fileObject = newFiles[0];
         const uploadPath = searchPath.replace(/^\/+|\/+$/g, '') + '/' + fileObject.name
         const formData = new FormData();
-        formData.append("file_to_upload", fileObject);
-        formData.append('bucket_name', bucketName);
-        formData.append('upload_path', uploadPath.replace(/^\/+|\/+$/g, ''));
+        formData.append("fileToUpload", fileObject);
+        formData.append('bucketName', credentials!.bucketName);
+        formData.append('uploadPath', uploadPath.replace(/^\/+|\/+$/g, ''));
 
-        const responseData = await fetchUploadresponse(
-            formData
-        )
+        const responseData = await fetchUploadresponse(formData)
         console.log(responseData);
+        if (responseData.error){
+            setIsUploading(false);
+            return
+        }
 
         // await sleep(5000);
         onSearch(searchPath.replace(/^\/+|\/+$/g, '') + '/');
         setIsUploading(false);
+    }
+
+    let listingContentToRender;
+    console.log('isFetching || isUploading');
+    console.log(isFetching, isUploading);
+    if (isFetching || isUploading){
+        listingContentToRender = <LoadingSpinner/>
+    }
+    else {
+        listingContentToRender = fileList.map((row, rowIndex) => (
+            <ul className="listing-row" key={rowIndex}>
+                <li className="listing-cell-item listing-cell-type">{row.type}</li>
+                {
+                    row.type === 'File'
+                    ?
+                    <li className="listing-cell-item listing-cell-name">{row.fileName}</li>
+                    :
+                    <li
+                        className="listing-cell-item listing-cell-name"
+                        onClick={() => handleTraverse(row)}>
+                            {row.fileName}
+                    </li>
+                }
+                <li className="listing-cell-item listing-cell-file-size">{row.displaySize}</li>
+                <li className="listing-cell-item listing-cell-last-modified">{row.lastModified}</li>
+                {
+                    row.type === 'File'
+                    ?
+                    <li className="listing-cell-item listing-cell-download">
+                        <img
+                            src="downloaded-symbol-svgrepo-com.svg"
+                            alt="!"
+                            onClick={() => handleDownload(row)}
+                        />
+                    </li>
+                    :
+                    <li className="listing-cell-item listing-cell-dummy"></li>
+                }
+            </ul>
+            ))
     }
 
     return (
@@ -125,47 +175,33 @@ export function FileListings(
             onDragLeave={handleDragLeave}
             onDrop={handleUploadConfirmation}
         >
-            <div className="listing-header">
-                <div className="listing-header-item listing-cell-type">
-                    Type
-                </div>
-                <div className="listing-header-item listing-cell-name">
-                    Name
-                </div>
-                <div className="listing-header-item listing-cell-file-size">
-                    File Size
-                </div>
-                <div className="listing-header-item listing-cell-last-modified">
-                    Last Modified
-                </div>
-                <div className="listing-header-item listing-cell-download">
-                    Download
-                </div>
-            </div>
-            {!isFetching && !isUploading && fileList.length > 0 && fileList.map((row, rowIndex) => (
-            <ul className="listing-row" key={rowIndex}>
-                <li className="listing-cell-item listing-cell-type">{row.type}</li>
-                {
-                    row.type === 'File'
-                    ?
-                    <li className="listing-cell-item listing-cell-name">{row.fileName}</li>
-                    :
-                    <li className="listing-cell-item listing-cell-name" onClick={() => handleTraverse(row)}>{row.fileName}</li>
-                }
-                <li className="listing-cell-item listing-cell-file-size">{row.displaySize}</li>
-                <li className="listing-cell-item listing-cell-last-modified">{row.lastModified}</li>
-                {
-                    row.type === 'File'
-                    ?
-                    <li className="listing-cell-item listing-cell-download">
-                        <img src="downloaded-symbol-svgrepo-com.svg" alt="!" onClick={() => handleDownload(row)} />
-                    </li>
-                    :
-                    <li className="listing-cell-item listing-cell-dummy"></li>
-                }
-            </ul>
-            ))}
+            <ListingHeaderRow />
+            { listingContentToRender }
+
         </div>
         </>
+    )
+}
+
+
+function ListingHeaderRow() {
+    return (
+    <div className="listing-header">
+        <div className="listing-header-item listing-cell-type">
+            Type
+        </div>
+        <div className="listing-header-item listing-cell-name">
+            Name
+        </div>
+        <div className="listing-header-item listing-cell-file-size">
+            File Size
+        </div>
+        <div className="listing-header-item listing-cell-last-modified">
+            Last Modified
+        </div>
+        <div className="listing-header-item listing-cell-download">
+            Download
+        </div>
+    </div>
     )
 }

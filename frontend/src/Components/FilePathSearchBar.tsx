@@ -1,11 +1,13 @@
 import { useRef } from 'react'
-import { FilePathSearchBarPropsObject } from '../Types/types.tsx'
+import { useContext } from 'react';
+
+import { ListPanelContext } from '../Contexts/contexts.tsx'
+import { ListPanelContextType } from '../Types/types.tsx'
 
 import "./FilePathSearchBar.css";
 
-export function FilePathSearchBar(
-    { searchPath, isFetching, onSearch }: FilePathSearchBarPropsObject
-) {
+export function FilePathSearchBar() {
+    const { searchPath, isFetching, onSearch } = useContext<ListPanelContextType>(ListPanelContext);
     const searchPathRef = useRef<HTMLInputElement>(null);
 
     function handleBreadcrumbTraversal(searchPath: string, directoryIndex: number) {
@@ -13,6 +15,8 @@ export function FilePathSearchBar(
         onSearch(newSearchPath);
     }
 
+    console.log('searchPath');
+    console.log(searchPath);
     return (
         <>
         <div className="search-bar">
@@ -32,7 +36,13 @@ export function FilePathSearchBar(
       </div>
       <div className="breadcrumb-bar">
         <img src="icons8-folder.svg" alt="" className="root-folder-image"/>
-        {searchPath.replace(/^\/+|\/+$/g, '').split('/').map((directory, directoryIndex) => (
+        <span 
+            className='directory-span'
+            onClick={() => onSearch('')}
+        >
+            &nbsp;<strong>/</strong>&nbsp;
+        </span>
+        {searchPath.replace(/^\/+|\/+$/g, '') && searchPath.replace(/^\/+|\/+$/g, '').split('/').map((directory, directoryIndex) => (
             <span
                 className='directory-span'
                 key={directoryIndex}

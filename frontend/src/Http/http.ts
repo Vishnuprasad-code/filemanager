@@ -14,8 +14,10 @@ export async function fetchConnectData(
 
     const response = await fetch(url, requestOptions);
     const resData = await response.json();
-    if (!response.ok){
-        return {}
+    if (!response.ok) {
+        return {
+          'error': resData.message
+        }
     }
   
     return resData.data;
@@ -30,15 +32,17 @@ export async function fetchFilePaths(
         'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            bucket_name: bucketName,
-            prefix: prefix || ''
+            // bucketName,
+            prefix
         }),
     }
 
     const response = await fetch(url, requestOptions);
     const resData = await response.json();
     if (!response.ok) {
-      return {}
+      return {
+        'error': resData.message
+      }
     }
   
     return resData.data;
@@ -54,16 +58,18 @@ export async function fetchDownloadresponse(
         'Content-Type': 'application/json',
     },
         body: JSON.stringify({
-            bucket_name: bucketName,
-            object_name: objectName
+            bucketName,
+            objectName
         }),
     }
 
     const response = await fetch(url, requestOptions);
     const resData = await response.json();
     if (!response.ok) {
-        return {}
-    }
+        return {
+          'error': resData.message
+        }
+      }
   
     return resData.data;
 }
@@ -79,7 +85,10 @@ export async function fetchUploadresponse(formData: FormData) {
     const response = await fetch('/api/s3/upload', requestOptions);
     const resData = await response.json();
     if (!response.ok) {
-        return {}
-    }
+        return {
+          'error': resData.message
+        }
+      }
+
     return resData.data;
-    }
+}

@@ -1,9 +1,10 @@
 export interface credentialsObject {
-    'aws_access_key_id': string,
-    'aws_secret_access_key': string,
-    'bucket_name': string,
-    'region_name': string,
-    'signature_version': string
+    // 'aws_access_key_id': string,
+    // 'aws_secret_access_key': string,
+    // 'bucket_name': string,
+    // 'region_name': string,
+    // 'signature_version': string
+    [key: string]: string
   }
 
 
@@ -13,6 +14,25 @@ export interface CredentialComponentsProps {
 }
 
 
+export interface CredentialsContextType {
+  'credentials': credentialsObject | null
+}
+
+export interface fileListRowObject {
+  'type': "Folder" | "File",
+  'fileName': string,
+  'sizeInfo': string,
+  'displaySize': string,
+  'lastModified': string
+}
+
+export interface ListPanelContextType {
+  'isFetching': boolean,
+  'searchPath': string,
+  'fileList': fileListRowObject[],
+  'onSearch': (directory: string) => void,
+}
+
 export interface ListPanelPropsObject {
   'credentials': credentialsObject,
 }
@@ -21,15 +41,6 @@ export interface FilePathSearchBarPropsObject {
   'searchPath': string,
   'isFetching': boolean,
   'onSearch': (directory: string) => void,
-}
-
-
-export interface fileListRowObject {
-  'type': "Folder" | "File",
-  'fileName': string,
-  'sizeInfo': string,
-  'displaySize': string,
-  'lastModified': string
 }
 
 

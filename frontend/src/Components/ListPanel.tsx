@@ -1,33 +1,52 @@
-import { useState } from 'react'
+import { useState, useContext, useEffect } from 'react'
 
-import { fetchFilePaths } from '../Http/http.js';
-import { ListPanelPropsObject } from '../Types/types.tsx'
+import { 
+    CredentialsContext,
+    ListPanelContext
 
+} from '../Contexts/contexts.tsx'
+import { CredentialsContextType } from '../Types/types.tsx'
+
+
+import { fetchFilePaths } from '../Http/http.ts';
 import { FilePathSearchBar } from './FilePathSearchBar.tsx'
 import { FileListings } from './FileListings.tsx'
 
 
 export function ListPanel(
-    { credentials }: ListPanelPropsObject
+    // { credentials }: ListPanelPropsObject
 ) {
     const [fileList, setFileList] = useState([]);
-    const [searchPath, setSearchPath] = useState("");
+    const [searchPath, setSearchPath] = useState('');
     const [isFetching, setIsFetching] = useState(false);
+
+    const { credentials } = useContext<CredentialsContextType>(CredentialsContext);
+
+    useEffect(() => {
+        setFileList([]);
+        setSearchPath('');
+        setIsFetching(false);
+      }, [credentials]);
 
     // function sleep(ms: number){
     //     return new Promise(resolve => setTimeout(resolve, ms));
     // }
 
-    async function handleSearchPathClick(directory: string){
+    async function onSearch(directory: string){
         console.log('Go Clicked');
         setIsFetching(true);
 
         const newSearchPath = directory.replace(/^\/+|\/+$/g, '')
         const responseData = await fetchFilePaths(
             '/api/s3/list',
-            credentials.bucket_name,
-            newSearchPath,
+            credentials!.bucketName,
+            newSearchPath || '',
         );
+        if (responseData.error){
+            setIsFetching(false);
+            return
+        }
+
         setFileList(responseData.filePaths);
         setSearchPath(responseData.prefix);
         // await sleep(5000);
@@ -38,20 +57,17 @@ export function ListPanel(
     // function handleDownload(fileName){
     //     console.log(fileName);
     // }
+    const ListPanelCtxValue = {
+        'isFetching': isFetching,
+        'searchPath': searchPath,
+        'fileList': fileList,
+        'onSearch': onSearch,
+    }
+
     return (
-        <>
-        <FilePathSearchBar
-            searchPath={searchPath}
-            onSearch={handleSearchPathClick}
-            isFetching={isFetching}
-        />
-        <FileListings
-            searchPath={searchPath}
-            isFetching={isFetching}
-            bucketName={credentials.bucket_name}
-            fileList={fileList}
-            onSearch={handleSearchPathClick}
-        />   
-        </>
+        <ListPanelContext.Provider value={ListPanelCtxValue}>
+            <FilePathSearchBar/>
+            <FileListings/>
+        </ListPanelContext.Provider>
     )
 };
