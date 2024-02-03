@@ -32,7 +32,7 @@ export async function fetchFilePaths(
         'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-            // bucketName,
+            bucketName,
             prefix
         }),
     }
@@ -41,7 +41,7 @@ export async function fetchFilePaths(
     const resData = await response.json();
     if (!response.ok) {
       return {
-        'error': resData.message
+        'error': JSON.stringify(resData.message)
       }
     }
   

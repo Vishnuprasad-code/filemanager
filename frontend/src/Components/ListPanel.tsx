@@ -20,7 +20,7 @@ export function ListPanel(
     const [searchPath, setSearchPath] = useState('');
     const [isFetching, setIsFetching] = useState(false);
 
-    const { credentials } = useContext<CredentialsContextType>(CredentialsContext);
+    const { credentials, setMessage } = useContext<CredentialsContextType>(CredentialsContext);
 
     useEffect(() => {
         setFileList([]);
@@ -33,7 +33,7 @@ export function ListPanel(
     // }
 
     async function onSearch(directory: string){
-        console.log('Go Clicked');
+        console.log('Go Clicked', credentials);
         setIsFetching(true);
 
         const newSearchPath = directory.replace(/^\/+|\/+$/g, '')
@@ -43,6 +43,7 @@ export function ListPanel(
             newSearchPath || '',
         );
         if (responseData.error){
+            setMessage(responseData.error);
             setIsFetching(false);
             return
         }

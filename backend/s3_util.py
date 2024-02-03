@@ -4,11 +4,12 @@ from botocore.exceptions import ClientError
 
 
 class S3Manager():
+    s3_client = None
 
     def capture_exception(function):
-        def wraper_function(self, **kwargs):
+        def wraper_function(*args, **kwargs):
             try:
-                return function(self, **kwargs)
+                return function(*args, **kwargs)
             except ClientError as e:
                 return {'message': f'Client Error {e}'}
         return wraper_function
@@ -16,26 +17,28 @@ class S3Manager():
     def __init__(self, s3_client=None):
         self.s3_client = s3_client
 
+    @classmethod
     @capture_exception
     def get_client_s3(
-        self,
+        cls,
         aws_access_key_id,
         aws_secret_access_key,
         bucket_name=None,
         region_name='us-east-1',
         signature_version='s3v4'
     ):
-        self.s3_client = boto3.client(
+        cls.s3_client = boto3.client(
             's3',
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=region_name,
             config=Config(signature_version=signature_version)
         )
-        return self.s3_client
+        return cls.s3_client
 
+    @classmethod
     @capture_exception
-    def list_paths_s3(self, bucket_name, prefix=""):
+    def list_paths_s3(cls, bucket_name, prefix=""):
         prefix = prefix.strip()
         if prefix:
             prefix = prefix.strip('/ ') + '/'
@@ -43,7 +46,7 @@ class S3Manager():
         if '.' in last_directory:
             prefix = "/".join(prefix.strip('/').split('/')[:-1])
 
-        paginator = self.s3_client.get_paginator('list_objects')
+        paginator = cls.s3_client.get_paginator('list_objects')
         pages = paginator.paginate(
             Bucket=bucket_name, Prefix=prefix, Delimiter='/')
         path_list = []
@@ -82,7 +85,7 @@ class S3Manager():
                     'type': "File",
                     'fileName': file_name,
                     'sizeInfo': content_dict.get('Size'),
-                    'displaySize': self.format_bytes(content_dict.get('Size')),
+                    'displaySize': cls.format_bytes(content_dict.get('Size')),
                     'lastModified': content_dict.get('LastModified').strftime('%Y-%m-%dT%H:%M:%S')
                 }
                 file_path_list.append(file_path_dict)
@@ -94,8 +97,9 @@ class S3Manager():
         }
         return response
 
+    @classmethod
     @capture_exception
-    def create_presigned_url(self, bucket_name, object_name, expiration=30):
+    def create_presigned_url(cls, bucket_name, object_name, expiration=30):
         """Generate a presigned URL to share an S3 object
 
         :param bucket_name: string
@@ -108,7 +112,7 @@ class S3Manager():
         response = {
             'url': None,
         }
-        response['url'] = self.s3_client.generate_presigned_url(
+        response['url'] = cls.s3_client.generate_presigned_url(
             'get_object',
             Params={
                 'Bucket': bucket_name,
@@ -119,9 +123,10 @@ class S3Manager():
 
         return response
 
+    @classmethod
     @capture_exception
-    def upload_file_s3(self, bucket_name, file_name, object_name):
-        self.s3_client.upload_file(file_name, bucket_name, object_name)
+    def upload_file_s3(cls, bucket_name, file_name, object_name):
+        cls.s3_client.upload_file(file_name, bucket_name, object_name)
         return {'data': 'File Upload Success'}
 
     @staticmethod

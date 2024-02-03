@@ -16,7 +16,7 @@ import { LoadingSpinner } from './LoadingSpinner.tsx'
 import "./FileListings.css";
 
 export function FileListings(){
-    const { credentials } = useContext<CredentialsContextType>(CredentialsContext);
+    const { credentials, setMessage } = useContext<CredentialsContextType>(CredentialsContext);
     const { 
         searchPath,
         isFetching,
@@ -44,6 +44,7 @@ export function FileListings(){
         )
 
         if (responseData.error){
+            setMessage(responseData.error);
             return
         }
 
@@ -112,6 +113,7 @@ export function FileListings(){
         const responseData = await fetchUploadresponse(formData)
         console.log(responseData);
         if (responseData.error){
+            setMessage(responseData.error)
             setIsUploading(false);
             return
         }

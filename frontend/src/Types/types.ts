@@ -15,7 +15,8 @@ export interface CredentialComponentsProps {
 
 
 export interface CredentialsContextType {
-  'credentials': credentialsObject | null
+  'credentials': credentialsObject | null,
+  'setMessage': (message: string | null) => void,
 }
 
 export interface fileListRowObject {
