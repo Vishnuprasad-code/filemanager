@@ -38,8 +38,7 @@ export function FileListings(){
     async function handleDownload(row: fileListRowObject) {
         const objectName = searchPath.replace(/^\/+|\/+$/g, '') + '/' + row.fileName
         const responseData = await fetchDownloadresponse(
-            '/api/s3/download',
-            credentials!.bucketName,
+            credentials!,
             objectName.replace(/^\/+|\/+$/g, '')
         )
 
@@ -105,12 +104,12 @@ export function FileListings(){
 
         const fileObject = newFiles[0];
         const uploadPath = searchPath.replace(/^\/+|\/+$/g, '') + '/' + fileObject.name
-        const formData = new FormData();
-        formData.append("fileToUpload", fileObject);
-        formData.append('bucketName', credentials!.bucketName);
-        formData.append('uploadPath', uploadPath.replace(/^\/+|\/+$/g, ''));
 
-        const responseData = await fetchUploadresponse(formData)
+        const responseData = await fetchUploadresponse(
+            credentials!,
+            fileObject,
+            uploadPath.replace(/^\/+|\/+$/g, '')
+        )
         console.log(responseData);
         if (responseData.error){
             setMessage(responseData.error)

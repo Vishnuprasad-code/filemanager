@@ -1,6 +1,9 @@
 import { useState } from 'react'
 
-import CredentialComponent from './Components/CredentialComponent.tsx'
+import { 
+  S3CredentialComponent,
+  DropBoxCredentialComponent
+ } from './Components/CredentialComponent.tsx'
 import { ListPanel } from './Components/ListPanel.tsx'
 import { NotificationCard } from './Components/NotificationCard.tsx'
 
@@ -10,15 +13,6 @@ import { credentialsObject } from './Types/types.tsx'
 import { CredentialsContext } from './Contexts/contexts.tsx'
 
 import "./App.css";
-
-
-// interface inputCredentialsFormObject: { [k: string]: FormDataEntryValue } {
-//   'aws_access_key_id': string,
-//   'aws_secret_access_key': string,
-//   'bucket_name': string,
-//   'region_name': string,
-//   'signature_version': string,
-// };
 
 
 function App() {
@@ -38,7 +32,8 @@ function App() {
 
     setConnecting(true);
 
-    const url = '/api/s3/connect'
+    // const url = '/api/s3/connect'
+    const url = '/api/dropbox/connect'
     const resData = await fetchConnectData(url, inputCredentials)
     if (resData.error){
       setMessage(resData.error);
@@ -60,9 +55,10 @@ function App() {
     <CredentialsContext.Provider value={credentialCtxValue}>
       {(message) && <NotificationCard message={message} setMessage={setMessage}/>}
       <div id="container">
-        <CredentialComponent connecting={connecting} onConnect={handleConnect}/>
+        {/* <S3CredentialComponent connecting={connecting} onConnect={handleConnect}/> */}
+        <DropBoxCredentialComponent connecting={connecting} onConnect={handleConnect}/>
 
-        { credentials?.bucketName && <ListPanel/> }
+        { credentials?.platform && <ListPanel/> }
       </div>
     </CredentialsContext.Provider>
   )

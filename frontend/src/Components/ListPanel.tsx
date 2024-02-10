@@ -5,7 +5,7 @@ import {
     ListPanelContext
 
 } from '../Contexts/contexts.tsx'
-import { CredentialsContextType } from '../Types/types.tsx'
+import { CredentialsContextType, credentialsObject } from '../Types/types.tsx'
 
 
 import { fetchFilePaths } from '../Http/http.ts';
@@ -38,10 +38,9 @@ export function ListPanel(
 
         const newSearchPath = directory.replace(/^\/+|\/+$/g, '')
         const responseData = await fetchFilePaths(
-            '/api/s3/list',
-            credentials!.bucketName,
-            newSearchPath || '',
-        );
+                credentials!,
+                newSearchPath
+            )
         if (responseData.error){
             setMessage(responseData.error);
             setIsFetching(false);

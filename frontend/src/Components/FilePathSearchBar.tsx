@@ -11,7 +11,7 @@ export function FilePathSearchBar() {
     const searchPathRef = useRef<HTMLInputElement>(null);
 
     function handleBreadcrumbTraversal(searchPath: string, directoryIndex: number) {
-        const newSearchPath = searchPath.split('/').slice(0, directoryIndex + 1).join('/') + '/';
+        const newSearchPath = searchPath.replace(/^\/+|\/+$/g, '').split('/').slice(0, directoryIndex + 1).join('/') + '/';
         onSearch(newSearchPath);
     }
 

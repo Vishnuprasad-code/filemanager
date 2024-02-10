@@ -1,6 +1,6 @@
 import os
 
-from s3_util import S3Manager
+from s3_utils import S3Manager
 
 from werkzeug import utils, datastructures
 from flask_restful import reqparse, Resource
@@ -46,6 +46,7 @@ class S3Connection(Resource):
 
         response = {
             'bucketName': args.get('bucketName'),
+            'platform': 's3',
         }
         return {"data": response}, 200
 
@@ -111,7 +112,7 @@ s3_upload_parser.add_argument(
     location='form')
 
 
-class s3FileUpload(Resource):
+class S3FileUpload(Resource):
     def post(self):
         args = s3_upload_parser.parse_args()
         print(f'args: {args}')

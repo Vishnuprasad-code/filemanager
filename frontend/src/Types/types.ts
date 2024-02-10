@@ -1,9 +1,4 @@
 export interface credentialsObject {
-    // 'aws_access_key_id': string,
-    // 'aws_secret_access_key': string,
-    // 'bucket_name': string,
-    // 'region_name': string,
-    // 'signature_version': string
     [key: string]: string
   }
 

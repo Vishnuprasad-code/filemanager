@@ -5,7 +5,14 @@ from s3_resources import (
     S3Connection,
     S3List,
     S3Download,
-    s3FileUpload,
+    S3FileUpload,
+)
+
+from dropbox_resources import (
+    DropboxConnection,
+    DropboxList,
+    DropboxDownload,
+    DropboxFileUpload,
 )
 
 
@@ -17,7 +24,14 @@ api = Api(app)
 api.add_resource(S3Connection, '/api/s3/connect')
 api.add_resource(S3List, '/api/s3/list')
 api.add_resource(S3Download, '/api/s3/download')
-api.add_resource(s3FileUpload, '/api/s3/upload')
+api.add_resource(S3FileUpload, '/api/s3/upload')
+
+
+#  Actually setup the Api resource routing here
+api.add_resource(DropboxConnection, '/api/dropbox/connect')
+api.add_resource(DropboxList, '/api/dropbox/list')
+api.add_resource(DropboxDownload, '/api/dropbox/download')
+api.add_resource(DropboxFileUpload, '/api/dropbox/upload')
 
 
 @app.errorhandler(Exception)
