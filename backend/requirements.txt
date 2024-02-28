@@ -3,3 +3,6 @@ boto3
 Flask
 Flask-RESTful
 dropbox
+google-api-core
+gcloud
+azure-storage-blob

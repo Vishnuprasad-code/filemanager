@@ -15,6 +15,19 @@ from dropbox_resources import (
     DropboxFileUpload,
 )
 
+from gcloud_resources import (
+    GcloudConnection,
+    GcloudList,
+    GcloudDownload,
+    GcloudFileUpload,
+)
+
+from azure_resources import (
+    AzureConnection,
+    AzureList,
+    AzureDownload,
+    AzureFileUpload
+)
 
 app = Flask(__name__)
 api = Api(app)
@@ -32,6 +45,20 @@ api.add_resource(DropboxConnection, '/api/dropbox/connect')
 api.add_resource(DropboxList, '/api/dropbox/list')
 api.add_resource(DropboxDownload, '/api/dropbox/download')
 api.add_resource(DropboxFileUpload, '/api/dropbox/upload')
+
+
+#  Actually setup the Api resource routing here
+api.add_resource(GcloudConnection, '/api/gcloud/connect')
+api.add_resource(GcloudList, '/api/gcloud/list')
+api.add_resource(GcloudDownload, '/api/gcloud/download')
+api.add_resource(GcloudFileUpload, '/api/gcloud/upload')
+
+
+#  Actually setup the Api resource routing here
+api.add_resource(AzureConnection, '/api/azure/connect')
+api.add_resource(AzureList, '/api/azure/list')
+api.add_resource(AzureDownload, '/api/azure/download')
+api.add_resource(AzureFileUpload, '/api/azure/upload')
 
 
 @app.errorhandler(Exception)

@@ -115,7 +115,6 @@ s3_upload_parser.add_argument(
 class S3FileUpload(Resource):
     def post(self):
         args = s3_upload_parser.parse_args()
-        print(f'args: {args}')
         filename = utils.secure_filename(args['fileToUpload'].filename)
         args['fileToUpload'].save(filename)
         bucket_name = args['bucketName']

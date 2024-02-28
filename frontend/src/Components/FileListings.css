@@ -1,6 +1,6 @@
 #listing-panel {
     margin-top: 5px;
-    height: 600px;
+    height: 73vh;
     background: rgb(255, 255, 255);
     box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
     overflow: auto;
@@ -8,9 +8,9 @@
     scrollbar-gutter: stable;
   }
   
-  .listing-header {
-    margin-bottom: 4px;
+.listing-header {
     width: 100%;
+    margin-bottom: 4px;
     display: flex;
     flex-direction: row;
     background-color: #d1c7c7;

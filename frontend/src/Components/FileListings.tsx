@@ -11,6 +11,7 @@ import { CredentialsContextType,
 
 import { fetchDownloadresponse, fetchUploadresponse } from '../Http/http.ts';
 import { Modal } from './Modal.tsx'
+import UploadPopup from './UploadPopup.tsx'
 import { LoadingSpinner } from './LoadingSpinner.tsx'
 
 import "./FileListings.css";
@@ -26,7 +27,7 @@ export function FileListings(){
 
     const [uploadObject, setUploadObject] = useState<uploadObjectType>({
         isModalOpen: false,
-        newFiles: []
+        newFile: null
     });
     const [isUploading, setIsUploading] = useState(false);
 
@@ -86,23 +87,25 @@ export function FileListings(){
         event.preventDefault();
 
         console.log('handleUploadConfirmation:');
-        const newFiles = [...event.dataTransfer.files];
-        console.log(newFiles);
+        const droppedItems = [...event.dataTransfer.items];
+        if (droppedItems[0].webkitGetAsEntry()!.isDirectory) {
+            setMessage("Cannot upload a directory! Drop a file instead.")
+            return
+        }
 
         setUploadObject({
             isModalOpen: true,
-            newFiles: newFiles,
+            newFile: droppedItems[0].getAsFile(),
         })
     }
 
-    async function handleUpload(newFiles: File[]) {
+    async function handleUpload(fileObject: File) {
         setUploadObject({
             isModalOpen: false,
-            newFiles: [],
+            newFile: null,
         })
         setIsUploading(true);
 
-        const fileObject = newFiles[0];
         const uploadPath = searchPath.replace(/^\/+|\/+$/g, '') + '/' + fileObject.name
 
         const responseData = await fetchUploadresponse(
@@ -164,11 +167,13 @@ export function FileListings(){
 
     return (
         <>
-        <Modal
-            uploadObject={uploadObject}
-            setUploadObject={setUploadObject}
-            onConfirm={handleUpload}
-            searchPath={searchPath}/>
+        <Modal isModalOpen={uploadObject.isModalOpen}>
+            <UploadPopup
+                uploadObject={uploadObject}
+                setUploadObject={setUploadObject}
+                searchPath={searchPath}
+                onConfirm={handleUpload} />
+        </Modal>
         <div
             id="listing-panel"
             onDragEnter={handleDragEnter}

@@ -50,12 +50,17 @@ export interface FileListingsPropsObject {
 
 export interface uploadObjectType {
   'isModalOpen': boolean,
-  'newFiles': File[]
+  'newFile': File | null
 }
 
 export interface uploadConfirmModalType {
   'uploadObject': uploadObjectType,
-  'setUploadObject': ({isModalOpen, newFiles}: uploadObjectType) => void,
+  'setUploadObject': ({isModalOpen, newFile}: uploadObjectType) => void,
   'searchPath': string,
-  'onConfirm': (newFiles: File[]) => void,
+  'onConfirm': (fileObject: File) => void,
+}
+
+export interface modalPropsObject {
+  'isModalOpen': boolean,
+  'children': React.ReactNode
 }

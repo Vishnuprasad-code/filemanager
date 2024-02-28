@@ -11,7 +11,7 @@ export function S3CredentialComponent(
         submitButtonText = 'Connecting ...';
     }
     return (
-        <form className="credential-form" onSubmit={onConnect}>
+    <form className="credential-form" onSubmit={onConnect}>
         <div className="credential-element">
         <label htmlFor="awsAccessKeyId">Access Key*: </label>
             <input type="text" name="awsAccessKeyId" />
@@ -48,6 +48,58 @@ export function DropBoxCredentialComponent(
             <input type="text" name="dropboxAccessToken" />
         </div>
         <div className="credential-element-default">
+        </div>
+
+        <button className="credential-submit" type="submit">{ submitButtonText }</button>
+    </form>
+    )
+}
+
+
+export function GcloudCredentialComponent(
+    { onConnect, connecting }: CredentialComponentsProps
+) {
+    let submitButtonText = 'Connect';
+    if (connecting) {
+        submitButtonText = 'Connecting ...';
+    }
+    console.log(submitButtonText);
+    return (
+    <form className="credential-form" onSubmit={onConnect}>
+        <div className="credential-element">
+            <label htmlFor="keyfileJson">KeyfileJson*: </label>
+            <textarea placeholder="{}" name="keyfileJson" />
+        </div>
+        <div className="credential-element-default">
+            <label htmlFor="bucketName">Bucket*: </label>
+            <input type="text" name="bucketName" />
+        </div>
+
+        <button className="credential-submit" type="submit">{ submitButtonText }</button>
+    </form>
+    )
+}
+
+
+export function AzureCredentialComponent(
+    { onConnect, connecting }: CredentialComponentsProps
+) {
+    let submitButtonText = 'Connect';
+    if (connecting) {
+        submitButtonText = 'Connecting ...';
+    }
+    console.log(submitButtonText);
+    return (
+    <form className="credential-form" onSubmit={onConnect}>
+        <div className="credential-element">
+            <label htmlFor="sasToken">SAS Token*: </label>
+            <input type="text" name="sasToken" />
+        </div>
+        <div className="credential-element-default">
+            <label htmlFor="accountName">account_name*: </label>
+            <input type="text" name="accountName" />
+            <label htmlFor="containerName">container_name*: </label>
+            <input type="text" name="containerName" />
         </div>
 
         <button className="credential-submit" type="submit">{ submitButtonText }</button>

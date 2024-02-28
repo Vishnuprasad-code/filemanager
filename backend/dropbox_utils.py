@@ -79,7 +79,6 @@ class DropboxManager():
             meta = cls.dropbox_client.files_upload(
                 f.read(), object_name, mode=files.WriteMode("overwrite")
             )
-            print(meta)
         return {'data': 'File Upload Success'}
 
     @staticmethod

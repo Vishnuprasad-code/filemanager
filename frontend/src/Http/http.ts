@@ -60,7 +60,9 @@ function prepareFetchFilePathsRequestObject(
 ): { [key: string]: string; } {
 
   const url = `/api/${credentials!.platform}/list`;
-  if (credentials!.platform === 's3') {
+  if (
+    ['s3', 'gcloud'].includes(credentials!.platform)
+    ) {
       return {
           url,
           bucketName: credentials!.bucketName,
@@ -72,6 +74,13 @@ function prepareFetchFilePathsRequestObject(
           url,
           prefix: searchPath || '',
       }
+  }
+  else if (credentials!.platform === 'azure') {
+    return {
+        url,
+        containerName: credentials!.containerName,
+        prefix: searchPath || '',
+    }
   }
 
   return {
@@ -117,7 +126,9 @@ function prepareFetchDownloadresponseRequestObject(
 ): { [key: string]: string; } {
 
   const url = `/api/${credentials!.platform}/download`;
-  if (credentials!.platform === 's3') {
+  if (
+    ['s3', 'gcloud'].includes(credentials!.platform)
+    ) {
       return {
           url,
           bucketName: credentials!.bucketName,
@@ -129,6 +140,13 @@ function prepareFetchDownloadresponseRequestObject(
         url,
         objectName,
       }
+  }
+  else if (credentials!.platform === 'azure') {
+    return {
+      url,
+      containerName: credentials!.containerName,
+      objectName,
+    }
   }
 
   return {
@@ -179,7 +197,10 @@ function prepareFetchUploadresponseRequestObject(
   const formData = new FormData();
   formData.append("fileToUpload", fileObject);
   formData.append('uploadPath', uploadPath.replace(/^\/+|\/+$/g, ''));
-  if (credentials!.platform === 's3') {
+
+  if (
+    ['s3', 'gcloud'].includes(credentials!.platform)
+    ) {
       formData.append('bucketName', credentials!.bucketName);
       return {
           url,
@@ -192,6 +213,13 @@ function prepareFetchUploadresponseRequestObject(
         url,
         formData,
       }
+  }
+  else if (credentials!.platform === 'azure') {
+    formData.append('containerName', credentials!.containerName);
+    return {
+      url,
+      formData,
+    }
   }
 
   return {

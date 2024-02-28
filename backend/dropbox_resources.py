@@ -78,7 +78,6 @@ dropbox_upload_parser.add_argument(
 class DropboxFileUpload(Resource):
     def post(self):
         args = dropbox_upload_parser.parse_args()
-        print(f'args: {args}')
         filename = utils.secure_filename(args['fileToUpload'].filename)
         args['fileToUpload'].save(filename)
         upload_path = args['uploadPath']
