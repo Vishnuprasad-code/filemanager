@@ -21,6 +21,12 @@ export async function fetchConnectData(
           'error': resData.message
         }
     }
+
+    if (resData.data?.message) {
+      return {
+        'error': resData.data.message
+      }
+    }
   
     return resData.data;
 }
@@ -47,6 +53,12 @@ export async function fetchFilePaths(
   if (!response.ok) {
     return {
       'error': JSON.stringify(resData.message)
+    }
+  }
+
+  if (resData.data?.message) {
+    return {
+      'error': resData.data.message
     }
   }
 
@@ -115,7 +127,13 @@ export async function fetchDownloadresponse(
           'error': resData.message
         }
       }
-  
+
+    if (resData.data?.message) {
+      return {
+        'error': resData.data.message
+      }
+    }
+
     return resData.data;
 }
 
@@ -180,7 +198,13 @@ export async function fetchUploadresponse(
       return {
         'error': resData.message
       }
+  }
+
+  if (resData.data?.message) {
+    return {
+      'error': resData.data.message
     }
+  }
 
   return resData.data;
 }
