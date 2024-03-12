@@ -2,7 +2,7 @@
 
 ## Overview
 
-The app provides a file user interface to upload, list and download your files in cloud patforms like s3, gcloud, azure and dropbox.
+This repository contains a web application built with Flask as the backend and React as the frontend. It provides a filebrowser like user interface to upload, list and download your files in cloud patforms like s3, gcloud, azure and dropbox.
 
 ## Prerequisites
 
