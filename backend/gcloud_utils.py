@@ -5,7 +5,7 @@ from google.api_core.exceptions import ClientError
 from datetime import datetime, timedelta
 
 
-class GcloudManager():
+class GcloudManager:
     gcloud_client = None
 
     def capture_exception(function):
@@ -13,7 +13,8 @@ class GcloudManager():
             try:
                 return function(*args, **kwargs)
             except ClientError as e:
-                return {'message': f'Client Error {e}'}
+                return {"message": f"Client Error {e}"}
+
         return wraper_function
 
     def __init__(self, gcloud_client=None):
@@ -21,13 +22,12 @@ class GcloudManager():
 
     @classmethod
     @capture_exception
-    def get_client_gcloud(
-        cls,
-        keyfile_json
-    ):
+    def get_client_gcloud(cls, keyfile_json):
         keyfile_dict = cls.get_keyfile_dict(keyfile_json)
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict)
-        cls.gcloud_client = storage.Client(credentials=credentials, project="test-project")
+        cls.gcloud_client = storage.Client(
+            credentials=credentials, project="test-project"
+        )
         return cls.gcloud_client
 
     @staticmethod
@@ -43,10 +43,10 @@ class GcloudManager():
         if not keyfile_dict:
             return None
 
-        keyfile_dict = {
-            k.lower().replace(' ', '_'): v for k, v in keyfile_dict.items()
-        }
-        keyfile_dict['private_key'] = keyfile_dict.pop('private_key', '').replace('\\n', '\n')
+        keyfile_dict = {k.lower().replace(" ", "_"): v for k, v in keyfile_dict.items()}
+        keyfile_dict["private_key"] = keyfile_dict.pop("private_key", "").replace(
+            "\\n", "\n"
+        )
         return keyfile_dict
 
     @classmethod
@@ -54,51 +54,54 @@ class GcloudManager():
     def list_paths_gcloud(cls, bucket_name, prefix=""):
         prefix = prefix.strip()
         if prefix:
-            prefix = prefix.strip('/ ') + '/'
-        last_directory = prefix.strip('/').split('/')[-1]
-        if '.' in last_directory:
-            prefix = "/".join(prefix.strip('/').split('/')[:-1])
+            prefix = prefix.strip("/ ") + "/"
+        last_directory = prefix.strip("/").split("/")[-1]
+        if "." in last_directory:
+            prefix = "/".join(prefix.strip("/").split("/")[:-1])
 
         bucket = cls.gcloud_client.bucket(bucket_name)
-        blobs = bucket.list_blobs(prefix=prefix, delimiter='/')
+        blobs = bucket.list_blobs(prefix=prefix, delimiter="/")
+        blobs_prefixes = blobs.prefixes or []
 
         file_path_list = []
         for blob in blobs:
             file_name = blob.name
             if not file_name:
                 continue
-            file_name = file_name.replace(prefix, '')
+            file_name = file_name.replace(prefix, "")
             if not file_name:
                 continue
             file_path_dict = {
-                'type': "File",
-                'fileName': file_name,
-                'sizeInfo': blob.size,
-                'displaySize': cls.format_bytes(blob.size),
-                'lastModified': blob.updated.strftime('%Y-%m-%dT%H:%M:%S')
+                "type": "File",
+                "fileName": file_name,
+                "sizeInfo": blob.size,
+                "displaySize": cls.format_bytes(blob.size),
+                "lastModified": blob.updated.strftime("%Y-%m-%dT%H:%M:%S"),
             }
             file_path_list.append(file_path_dict)
 
         path_list = []
-        for prefix_ in blobs.prefixes:
+        for prefix_ in blobs_prefixes:
             if not prefix_:
                 continue
-            prefix_ = prefix_.replace(prefix, '')
+            prefix_ = prefix_.replace(prefix, "")
             if not prefix_:
                 continue
             folder_path_dict = {
-                'type': "Folder",
-                'fileName': prefix_,
-                'sizeInfo': None,
-                'displaySize': None,
-                'lastModified': None
+                "type": "Folder",
+                "fileName": prefix_,
+                "sizeInfo": None,
+                "displaySize": None,
+                "lastModified": None,
             }
             path_list.append(folder_path_dict)
 
-        path_list.extend(sorted(file_path_list, key=lambda d: d['lastModified'], reverse=True))
+        path_list.extend(
+            sorted(file_path_list, key=lambda d: d["lastModified"], reverse=True)
+        )
         response = {
-            'filePaths': path_list,
-            'prefix': prefix,
+            "filePaths": path_list,
+            "prefix": prefix,
         }
         return response
 
@@ -107,7 +110,7 @@ class GcloudManager():
     def create_presigned_url(cls, bucket_name, object_name, expiration=60):
         # Generate a presigned URL for the S3 object
         response = {
-            'url': None,
+            "url": None,
         }
         bucket = cls.gcloud_client.bucket(bucket_name)
         blob = bucket.blob(object_name)
@@ -118,7 +121,7 @@ class GcloudManager():
         # Generate the pre-signed URL
         signed_url = blob.generate_signed_url(expiration_time)
 
-        response['url'] = signed_url
+        response["url"] = signed_url
 
         return response
 
@@ -128,11 +131,11 @@ class GcloudManager():
         bucket = cls.gcloud_client.bucket(bucket_name)
         blob = bucket.blob(object_name)  # creating a blob in cloud with object_name
         blob.upload_from_filename(file_name)  # upload our file
-        return {'data': 'File Upload Success'}
+        return {"data": "File Upload Success"}
 
     @staticmethod
     def format_bytes(size):
-        units = ['B', 'KB', 'MB', 'GB']
+        units = ["B", "KB", "MB", "GB"]
         unit_size = 1024
         unit_index = 0
 
@@ -140,4 +143,4 @@ class GcloudManager():
             size /= unit_size
             unit_index += 1
 
-        return f'{size:.2f} {units[unit_index]}'
+        return f"{size:.2f} {units[unit_index]}"
