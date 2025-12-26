@@ -5,6 +5,8 @@ from azure_utils import AzureManager
 from werkzeug import utils, datastructures
 from flask_restful import reqparse, Resource
 
+from flask import session
+
 
 azure_connection_parser = reqparse.RequestParser()
 azure_connection_parser.add_argument(
@@ -24,7 +26,7 @@ class AzureConnection(Resource):
 
     def post(self):
         args = azure_connection_parser.parse_args()
-
+        session["credentials"] = args
         AzureManager.get_client_azure(
             account_name=args['accountName'],
             sas_token=args['sasToken'],
@@ -51,7 +53,15 @@ azure_list_parser.add_argument(
 class AzureList(Resource):
     def post(self):
         args = azure_list_parser.parse_args()
-        response = AzureManager.list_paths_azure(
+        
+        credentials = session["credentials"]
+        azure_client = AzureManager.get_client_azure(
+            account_name=credentials['accountName'],
+            sas_token=credentials['sasToken'],
+        )
+        azuremanager = AzureManager(azure_client)
+        
+        response = azuremanager.list_paths_azure(
             container_name=args['containerName'],
             prefix=args['prefix'],
         )
@@ -72,7 +82,15 @@ azure_download_parser.add_argument(
 class AzureDownload(Resource):
     def post(self):
         args = azure_download_parser.parse_args()
-        response = AzureManager.create_presigned_url(
+        
+        credentials = session["credentials"]
+        azure_client = AzureManager.get_client_azure(
+            account_name=credentials['accountName'],
+            sas_token=credentials['sasToken'],
+        )
+        azuremanager = AzureManager(azure_client)
+        
+        response = azuremanager.create_presigned_url(
             container_name=args['containerName'],
             object_name=args['objectName'],
             expiration=60
@@ -101,11 +119,20 @@ azure_upload_parser.add_argument(
 class AzureFileUpload(Resource):
     def post(self):
         args = azure_upload_parser.parse_args()
+
+        
+        credentials = session["credentials"]
+        azure_client = AzureManager.get_client_azure(
+            account_name=credentials['accountName'],
+            sas_token=credentials['sasToken'],
+        )
+        azuremanager = AzureManager(azure_client)
+
         filename = utils.secure_filename(args['fileToUpload'].filename)
         args['fileToUpload'].save(filename)
         container_name = args['containerName']
         upload_path = args['uploadPath']
-        AzureManager.upload_file_azure(
+        azuremanager.upload_file_azure(
             container_name,
             filename,
             upload_path

@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from flask_restful import Api
 
 from s3_resources import (
@@ -31,6 +31,7 @@ from azure_resources import (
 
 app = Flask(__name__)
 api = Api(app)
+app.secret_key = "super-secret-key"  # required for sessions
 
 
 #  Actually setup the Api resource routing here

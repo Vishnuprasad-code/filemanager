@@ -5,6 +5,8 @@ from s3_utils import S3Manager
 from werkzeug import utils, datastructures
 from flask_restful import reqparse, Resource
 
+from flask import session
+
 
 s3_connection_parser = reqparse.RequestParser()
 s3_connection_parser.add_argument(
@@ -35,7 +37,7 @@ class S3Connection(Resource):
 
     def post(self):
         args = s3_connection_parser.parse_args()
-
+        session['credentials'] = args
         S3Manager.get_client_s3(
             aws_access_key_id=args['awsAccessKeyId'],
             aws_secret_access_key=args['awsSecretAccessKey'],
@@ -65,7 +67,18 @@ s3_list_parser.add_argument(
 class S3List(Resource):
     def post(self):
         args = s3_list_parser.parse_args()
-        response = S3Manager.list_paths_s3(
+
+        credentials = session.get("credentials", {})
+        s3client = S3Manager.get_client_s3(
+            aws_access_key_id=credentials['awsAccessKeyId'],
+            aws_secret_access_key=credentials['awsSecretAccessKey'],
+            bucket_name=credentials['bucketName'],
+            region_name=credentials['regionName'],
+            signature_version=credentials['signatureVersion'],
+        )
+        s3manager = S3Manager(s3client)
+
+        response = s3manager.list_paths_s3(
             bucket_name=args['bucketName'],
             prefix=args['prefix'],
         )
@@ -86,7 +99,18 @@ s3_download_parser.add_argument(
 class S3Download(Resource):
     def post(self):
         args = s3_download_parser.parse_args()
-        response = S3Manager.create_presigned_url(
+        
+        credentials = session.get("credentials", {})
+        s3client = S3Manager.get_client_s3(
+            aws_access_key_id=credentials['awsAccessKeyId'],
+            aws_secret_access_key=credentials['awsSecretAccessKey'],
+            bucket_name=credentials['bucketName'],
+            region_name=credentials['regionName'],
+            signature_version=credentials['signatureVersion'],
+        )
+        s3manager = S3Manager(s3client)
+
+        response = s3manager.create_presigned_url(
             bucket_name=args['bucketName'],
             object_name=args['objectName'],
             expiration=60
@@ -115,11 +139,22 @@ s3_upload_parser.add_argument(
 class S3FileUpload(Resource):
     def post(self):
         args = s3_upload_parser.parse_args()
+
+        credentials = session.get("credentials", {})
+        s3client = S3Manager.get_client_s3(
+            aws_access_key_id=credentials['awsAccessKeyId'],
+            aws_secret_access_key=credentials['awsSecretAccessKey'],
+            bucket_name=credentials['bucketName'],
+            region_name=credentials['regionName'],
+            signature_version=credentials['signatureVersion'],
+        )
+        s3manager = S3Manager(s3client)
+        
         filename = utils.secure_filename(args['fileToUpload'].filename)
         args['fileToUpload'].save(filename)
         bucket_name = args['bucketName']
         upload_path = args['uploadPath']
-        S3Manager.upload_file_s3(
+        s3manager.upload_file_s3(
             bucket_name,
             filename,
             upload_path

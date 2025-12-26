@@ -5,6 +5,7 @@ from gcloud_utils import GcloudManager
 from werkzeug import utils, datastructures
 from flask_restful import reqparse, Resource
 
+from flask import session
 
 gcloud_connection_parser = reqparse.RequestParser()
 gcloud_connection_parser.add_argument(
@@ -22,6 +23,7 @@ class GcloudConnection(Resource):
     def post(self):
         args = gcloud_connection_parser.parse_args()
 
+        session["credentials"] = args
         GcloudManager.get_client_gcloud(
             keyfile_json=args['keyfileJson'],
         )
@@ -47,7 +49,14 @@ gcloud_list_parser.add_argument(
 class GcloudList(Resource):
     def post(self):
         args = gcloud_list_parser.parse_args()
-        response = GcloudManager.list_paths_gcloud(
+        
+        credentials = session["credentials"]
+        gcloud_client = GcloudManager.get_client_gcloud(
+            keyfile_json=args['keyfileJson'],
+        )
+        gcloudmanager = GcloudManager(gcloud_client)
+        
+        response = gcloudmanager.list_paths_gcloud(
             bucket_name=args['bucketName'],
             prefix=args['prefix'],
         )
@@ -97,11 +106,18 @@ gcloud_upload_parser.add_argument(
 class GcloudFileUpload(Resource):
     def post(self):
         args = gcloud_upload_parser.parse_args()
+        
+        credentials = session["credentials"]
+        gcloud_client = GcloudManager.get_client_gcloud(
+            keyfile_json=args['keyfileJson'],
+        )
+        gcloudmanager = GcloudManager(gcloud_client)
+        
         filename = utils.secure_filename(args['fileToUpload'].filename)
         args['fileToUpload'].save(filename)
         bucket_name = args['bucketName']
         upload_path = args['uploadPath']
-        GcloudManager.upload_file_gcloud(
+        gcloudmanager.upload_file_gcloud(
             bucket_name,
             filename,
             upload_path

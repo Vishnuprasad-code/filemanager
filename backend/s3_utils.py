@@ -5,8 +5,6 @@ from botocore.exceptions import ClientError
 
 
 class S3Manager:
-    s3_client = None
-
     def capture_exception(function):
         def wraper_function(*args, **kwargs):
             try:
@@ -29,18 +27,18 @@ class S3Manager:
         region_name="us-east-1",
         signature_version="s3v4",
     ):
-        cls.s3_client = boto3.client(
+        s3_client = boto3.client(
             "s3",
             aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key,
             region_name=region_name,
             config=Config(signature_version=signature_version),
         )
-        return cls.s3_client
 
-    @classmethod
+        return s3_client
+
     @capture_exception
-    def list_paths_s3(cls, bucket_name, prefix=""):
+    def list_paths_s3(self, bucket_name, prefix=""):
         prefix = prefix.strip()
         if prefix:
             prefix = prefix.strip("/ ") + "/"
@@ -48,7 +46,7 @@ class S3Manager:
         if "." in last_directory:
             prefix = "/".join(prefix.strip("/").split("/")[:-1])
 
-        paginator = cls.s3_client.get_paginator("list_objects")
+        paginator = self.s3_client.get_paginator("list_objects")
         pages, pages_copy = tee(
             paginator.paginate(Bucket=bucket_name, Prefix=prefix, Delimiter="/")
         )
@@ -88,7 +86,7 @@ class S3Manager:
                     "type": "File",
                     "fileName": file_name,
                     "sizeInfo": content_dict.get("Size"),
-                    "displaySize": cls.format_bytes(content_dict.get("Size")),
+                    "displaySize": self.format_bytes(content_dict.get("Size")),
                     "lastModified": content_dict.get("LastModified").strftime(
                         "%Y-%m-%dT%H:%M:%S"
                     ),
@@ -104,9 +102,8 @@ class S3Manager:
         }
         return response
 
-    @classmethod
     @capture_exception
-    def create_presigned_url(cls, bucket_name, object_name, expiration=30):
+    def create_presigned_url(self, bucket_name, object_name, expiration=30):
         """Generate a presigned URL to share an S3 object
 
         :param bucket_name: string
@@ -119,7 +116,7 @@ class S3Manager:
         response = {
             "url": None,
         }
-        response["url"] = cls.s3_client.generate_presigned_url(
+        response["url"] = self.s3_client.generate_presigned_url(
             "get_object",
             Params={"Bucket": bucket_name, "Key": object_name},
             ExpiresIn=expiration,
@@ -127,10 +124,9 @@ class S3Manager:
 
         return response
 
-    @classmethod
     @capture_exception
-    def upload_file_s3(cls, bucket_name, file_name, object_name):
-        cls.s3_client.upload_file(file_name, bucket_name, object_name)
+    def upload_file_s3(self, bucket_name, file_name, object_name):
+        self.s3_client.upload_file(file_name, bucket_name, object_name)
         return {"data": "File Upload Success"}
 
     @staticmethod

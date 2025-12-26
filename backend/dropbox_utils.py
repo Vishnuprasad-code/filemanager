@@ -3,7 +3,6 @@ from dropbox.exceptions import DropboxException
 
 
 class DropboxManager():
-    dropbox_client = None
 
     def capture_exception(function):
         def wraper_function(*args, **kwargs):
@@ -22,12 +21,11 @@ class DropboxManager():
         cls,
         dropbox_access_token
     ):
-        cls.dropbox_client = Dropbox(dropbox_access_token)
-        return cls.dropbox_client
+        dropbox_client = Dropbox(dropbox_access_token)
+        return dropbox_client
 
-    @classmethod
     @capture_exception
-    def list_paths_dropbox(cls, prefix=""):
+    def list_paths_dropbox(self, prefix=""):
         prefix = prefix.strip()
         if prefix:
             prefix = '/' + prefix.strip('/ ')
@@ -36,19 +34,19 @@ class DropboxManager():
             prefix = "/" + "/".join(prefix.strip('/').split('/')[:-1])
 
         file_path_list = []
-        entries = getattr(cls.dropbox_client.files_list_folder(prefix), 'entries', [])
+        entries = getattr(self.dropbox_client.files_list_folder(prefix), 'entries', [])
         for entry in entries:
             file_name = getattr(entry, 'path_display', '')
             file_name = file_name.strip('/ ').replace(prefix.strip('/ '), '').strip('/ ')
-            file_type = cls.get_file_or_folder(entry)
+            file_type = self.get_file_or_folder(entry)
             if file_type == 'Folder':
                 file_name = file_name + "/"
             file_path_dict = {
                 'type': file_type,
                 'fileName': file_name,
                 'sizeInfo': getattr(entry, 'size', None),
-                'displaySize': cls.format_bytes(getattr(entry, 'size', None)),
-                'lastModified': cls.get_last_modified(entry)
+                'displaySize': self.format_bytes(getattr(entry, 'size', None)),
+                'lastModified': self.get_last_modified(entry)
             }
             file_path_list.append(file_path_dict)
 
@@ -59,24 +57,22 @@ class DropboxManager():
         }
         return response
 
-    @classmethod
     @capture_exception
-    def create_presigned_url(cls, object_name):
+    def create_presigned_url(self, object_name):
         response = {
             'url': None,
         }
         object_name = '/' + object_name.strip('/ ')
-        shared_link_metadata = cls.dropbox_client.sharing_create_shared_link(object_name)
+        shared_link_metadata = self.dropbox_client.sharing_create_shared_link(object_name)
         response['url'] = shared_link_metadata.url.replace('&dl=0', '&dl=1')
 
         return response
 
-    @classmethod
     @capture_exception
-    def upload_file_dropbox(cls, file_name, object_name):
+    def upload_file_dropbox(self, file_name, object_name):
         object_name = '/' + object_name.strip('/ ')
         with open(file_name, "rb") as f:
-            meta = cls.dropbox_client.files_upload(
+            meta = self.dropbox_client.files_upload(
                 f.read(), object_name, mode=files.WriteMode("overwrite")
             )
         return {'data': 'File Upload Success'}

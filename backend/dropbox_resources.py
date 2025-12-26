@@ -5,6 +5,7 @@ from dropbox_utils import DropboxManager
 from werkzeug import utils, datastructures
 from flask_restful import reqparse, Resource
 
+from flask import session
 
 dropbox_connection_parser = reqparse.RequestParser()
 dropbox_connection_parser.add_argument(
@@ -18,7 +19,7 @@ class DropboxConnection(Resource):
 
     def post(self):
         args = dropbox_connection_parser.parse_args()
-
+        session["credentials"] = args
         DropboxManager.get_client_dropbox(
             dropbox_access_token=args['dropboxAccessToken'],
         )
@@ -39,7 +40,14 @@ dropbox_list_parser.add_argument(
 class DropboxList(Resource):
     def post(self):
         args = dropbox_list_parser.parse_args()
-        response = DropboxManager.list_paths_dropbox(
+
+        credentials = session["credentials"] 
+        dropbox_client = DropboxManager.get_client_dropbox(
+            dropbox_access_token=credentials['dropboxAccessToken'],
+        )
+        dropboxmanager = DropboxManager(dropbox_client)
+
+        response = dropboxmanager.list_paths_dropbox(
             prefix=args['prefix'],
         )
         return {"data": response}, 200
@@ -55,7 +63,14 @@ dropbox_download_parser.add_argument(
 class DropboxDownload(Resource):
     def post(self):
         args = dropbox_download_parser.parse_args()
-        response = DropboxManager.create_presigned_url(
+
+        credentials = session["credentials"] 
+        dropbox_client = DropboxManager.get_client_dropbox(
+            dropbox_access_token=credentials['dropboxAccessToken'],
+        )
+        dropboxmanager = DropboxManager(dropbox_client)
+        
+        response = dropboxmanager.create_presigned_url(
             object_name=args['objectName'],
         )
         return {"data": response}, 200
@@ -78,10 +93,17 @@ dropbox_upload_parser.add_argument(
 class DropboxFileUpload(Resource):
     def post(self):
         args = dropbox_upload_parser.parse_args()
+
+        credentials = session["credentials"] 
+        dropbox_client = DropboxManager.get_client_dropbox(
+            dropbox_access_token=credentials['dropboxAccessToken'],
+        )
+        dropboxmanager = DropboxManager(dropbox_client)
+
         filename = utils.secure_filename(args['fileToUpload'].filename)
         args['fileToUpload'].save(filename)
         upload_path = args['uploadPath']
-        DropboxManager.upload_file_dropbox(
+        dropboxmanager.upload_file_dropbox(
             filename,
             upload_path
         )

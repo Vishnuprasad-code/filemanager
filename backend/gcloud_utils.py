@@ -6,8 +6,6 @@ from datetime import datetime, timedelta
 
 
 class GcloudManager:
-    gcloud_client = None
-
     def capture_exception(function):
         def wraper_function(*args, **kwargs):
             try:
@@ -20,15 +18,14 @@ class GcloudManager:
     def __init__(self, gcloud_client=None):
         self.gcloud_client = gcloud_client
 
-    @classmethod
     @capture_exception
-    def get_client_gcloud(cls, keyfile_json):
-        keyfile_dict = cls.get_keyfile_dict(keyfile_json)
+    def get_client_gcloud(self, keyfile_json):
+        keyfile_dict = self.get_keyfile_dict(keyfile_json)
         credentials = ServiceAccountCredentials.from_json_keyfile_dict(keyfile_dict)
-        cls.gcloud_client = storage.Client(
+        gcloud_client = storage.Client(
             credentials=credentials, project="test-project"
         )
-        return cls.gcloud_client
+        return gcloud_client
 
     @staticmethod
     def get_keyfile_dict(keyfile_json):
@@ -49,9 +46,8 @@ class GcloudManager:
         )
         return keyfile_dict
 
-    @classmethod
     @capture_exception
-    def list_paths_gcloud(cls, bucket_name, prefix=""):
+    def list_paths_gcloud(self, bucket_name, prefix=""):
         prefix = prefix.strip()
         if prefix:
             prefix = prefix.strip("/ ") + "/"
@@ -59,7 +55,7 @@ class GcloudManager:
         if "." in last_directory:
             prefix = "/".join(prefix.strip("/").split("/")[:-1])
 
-        bucket = cls.gcloud_client.bucket(bucket_name)
+        bucket = self.gcloud_client.bucket(bucket_name)
         blobs = bucket.list_blobs(prefix=prefix, delimiter="/")
         blobs_prefixes = blobs.prefixes or []
 
@@ -75,7 +71,7 @@ class GcloudManager:
                 "type": "File",
                 "fileName": file_name,
                 "sizeInfo": blob.size,
-                "displaySize": cls.format_bytes(blob.size),
+                "displaySize": self.format_bytes(blob.size),
                 "lastModified": blob.updated.strftime("%Y-%m-%dT%H:%M:%S"),
             }
             file_path_list.append(file_path_dict)
@@ -105,14 +101,13 @@ class GcloudManager:
         }
         return response
 
-    @classmethod
     @capture_exception
-    def create_presigned_url(cls, bucket_name, object_name, expiration=60):
+    def create_presigned_url(self, bucket_name, object_name, expiration=60):
         # Generate a presigned URL for the S3 object
         response = {
             "url": None,
         }
-        bucket = cls.gcloud_client.bucket(bucket_name)
+        bucket = self.gcloud_client.bucket(bucket_name)
         blob = bucket.blob(object_name)
 
         # Set the expiration time for the URL
@@ -125,10 +120,9 @@ class GcloudManager:
 
         return response
 
-    @classmethod
     @capture_exception
-    def upload_file_gcloud(cls, bucket_name, file_name, object_name):
-        bucket = cls.gcloud_client.bucket(bucket_name)
+    def upload_file_gcloud(self, bucket_name, file_name, object_name):
+        bucket = self.gcloud_client.bucket(bucket_name)
         blob = bucket.blob(object_name)  # creating a blob in cloud with object_name
         blob.upload_from_filename(file_name)  # upload our file
         return {"data": "File Upload Success"}

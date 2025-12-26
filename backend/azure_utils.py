@@ -8,7 +8,6 @@ from azure.storage.blob import (
 
 
 class AzureManager():
-    azure_client = None
 
     def capture_exception(function):
         def wraper_function(*args, **kwargs):
@@ -29,12 +28,11 @@ class AzureManager():
         sas_token,
     ):
         sas_token = f"?{sas_token.lstrip('?')}"
-        cls.azure_client = BlobServiceClient(account_url=f"https://{account_name}.blob.core.windows.net{sas_token}")
-        return cls.azure_client
+        azure_client = BlobServiceClient(account_url=f"https://{account_name}.blob.core.windows.net{sas_token}")
+        return azure_client
 
-    @classmethod
     @capture_exception
-    def list_paths_azure(cls, container_name, prefix=""):
+    def list_paths_azure(self, container_name, prefix=""):
         prefix = prefix.strip()
         if prefix:
             prefix = prefix.strip('/ ') + '/'
@@ -42,7 +40,7 @@ class AzureManager():
         if '.' in last_directory:
             prefix = "/".join(prefix.strip('/').split('/')[:-1])
 
-        container_client = cls.azure_client.get_container_client(container=container_name)
+        container_client = self.azure_client.get_container_client(container=container_name)
         blobs = container_client.walk_blobs(name_starts_with=prefix)
         path_list = []
         file_path_list = []
@@ -64,7 +62,7 @@ class AzureManager():
                 'type': "File",
                 'fileName': file_name,
                 'sizeInfo': blob.size,
-                'displaySize': cls.format_bytes(blob.size),
+                'displaySize': self.format_bytes(blob.size),
                 'lastModified': blob.last_modified.strftime('%Y-%m-%dT%H:%M:%S')
             }
             file_path_list.append(file_path_dict)
@@ -76,9 +74,8 @@ class AzureManager():
         }
         return response
 
-    @classmethod
     @capture_exception
-    def create_presigned_url(cls, container_name, object_name, expiration=None):
+    def create_presigned_url(self, container_name, object_name, expiration=None):
         """Generate a presigned URL to share an S3 object
 
         :param bucket_name: string
@@ -92,14 +89,13 @@ class AzureManager():
             'url': None,
         }
 
-        blob_client = cls.azure_client.get_blob_client(container=container_name, blob=object_name)
+        blob_client = self.azure_client.get_blob_client(container=container_name, blob=object_name)
         response['url'] = blob_client.url
         return response
 
-    @classmethod
     @capture_exception
-    def upload_file_azure(cls, container_name, file_name, object_name):
-        container_client = cls.azure_client.get_container_client(container=container_name)
+    def upload_file_azure(self, container_name, file_name, object_name):
+        container_client = self.azure_client.get_container_client(container=container_name)
         with open(file=file_name, mode="rb") as data:
             container_client.upload_blob(name=object_name, data=data, overwrite=True)
 
