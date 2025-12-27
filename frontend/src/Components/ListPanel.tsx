@@ -33,7 +33,6 @@ export function ListPanel(
     // }
 
     async function onSearch(directory: string) {
-        console.log('Go Clicked', credentials);
         setIsFetching(true);
 
         const newSearchPath = directory.replace(/^\/+|\/+$/g, '')

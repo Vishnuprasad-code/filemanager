@@ -1,51 +1,80 @@
 import { credentialsObject } from '../Types/types.ts'
 
 
+let csrfToken: string;
+
+
+export async function fetchCSRFToken() {
+  const requestOptions = {
+    method: 'GET',
+    // credentials: "include",
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  }
+
+  const url = "/api/csrf-token"
+  const response = await fetch(url, requestOptions);
+  const resData = await response.json();
+  if (!resData?.csrfToken) {
+    return {
+      'error': "Invalid csrfToken"
+    }
+  }
+  csrfToken = resData.csrfToken
+}
+
+
 export async function fetchConnectData(
-    url: string, inputCredentials: credentialsObject
-){
-    const requestOptions = {
-        method: 'POST',
-        headers: {
-        'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(
-          inputCredentials
-        ),
-    }
+  url: string, inputCredentials: credentialsObject
+) {
+  const requestOptions: RequestInit = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      "X-CSRFToken": csrfToken
 
-    const response = await fetch(url, requestOptions);
-    const resData = await response.json();
-    if (!response.ok) {
-        return {
-          'error': resData.message
-        }
-    }
+    },
+    credentials: "include",
+    body: JSON.stringify(
+      inputCredentials
+    ),
+  }
 
-    if (resData.data?.message) {
-      return {
-        'error': resData.data.message
-      }
+  const response = await fetch(url, requestOptions);
+  const resData = await response.json();
+  if (!response.ok) {
+    return {
+      'error': resData.message
     }
-  
-    return resData.data;
+  }
+
+  if (resData.data?.message) {
+    return {
+      'error': resData.data.message
+    }
+  }
+
+  return resData.data;
 }
 
 export async function fetchFilePaths(
   credentials: credentialsObject, searchPath: string | null
-){
-  const {url, ...requestObject} = prepareFetchFilePathsRequestObject(
+) {
+  const { url, ...requestObject } = prepareFetchFilePathsRequestObject(
     credentials,
     searchPath
   )
-  console.log('fetchFilePaths', url, requestObject)
 
-  const requestOptions = {
-      method: 'POST',
-      headers: {
+  const requestOptions: RequestInit = {
+    method: 'POST',
+    headers: {
       'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestObject),
+      "X-CSRFToken": csrfToken
+
+    },
+    credentials: "include",
+    body: JSON.stringify(requestObject),
   }
 
   const response = await fetch(url, requestOptions);
@@ -74,67 +103,69 @@ function prepareFetchFilePathsRequestObject(
   const url = `/api/${credentials!.platform}/list`;
   if (
     ['s3', 'gcloud'].includes(credentials!.platform)
-    ) {
-      return {
-          url,
-          bucketName: credentials!.bucketName,
-          prefix: searchPath || '',
-      }
+  ) {
+    return {
+      url,
+      bucketName: credentials!.bucketName,
+      prefix: searchPath || '',
+    }
   }
   else if (credentials!.platform === 'dropbox') {
-      return {
-          url,
-          prefix: searchPath || '',
-      }
+    return {
+      url,
+      prefix: searchPath || '',
+    }
   }
   else if (credentials!.platform === 'azure') {
     return {
-        url,
-        containerName: credentials!.containerName,
-        prefix: searchPath || '',
+      url,
+      containerName: credentials!.containerName,
+      prefix: searchPath || '',
     }
   }
 
   return {
-      url,
-      bucketName: credentials!.bucketName,
-      prefix: searchPath || '',
+    url,
+    bucketName: credentials!.bucketName,
+    prefix: searchPath || '',
   }
 }
 
 
 export async function fetchDownloadresponse(
-    credentials: credentialsObject, objectName: string
-){
-  const {url, ...requestObject} = prepareFetchDownloadresponseRequestObject(
+  credentials: credentialsObject, objectName: string
+) {
+  const { url, ...requestObject } = prepareFetchDownloadresponseRequestObject(
     credentials,
     objectName
   )
-  
-  console.log(fetchDownloadresponse, url, requestObject)
-    const requestOptions = {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+
+  const requestOptions: RequestInit = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      "X-CSRFToken": csrfToken
+
     },
-        body: JSON.stringify(requestObject),
+    credentials: "include",
+    body: JSON.stringify(requestObject),
+  }
+
+  const response = await fetch(url, requestOptions);
+  const resData = await response.json();
+  if (!response.ok) {
+    return {
+      'error': resData.message
     }
+  }
 
-    const response = await fetch(url, requestOptions);
-    const resData = await response.json();
-    if (!response.ok) {
-        return {
-          'error': resData.message
-        }
-      }
-
-    if (resData.data?.message) {
-      return {
-        'error': resData.data.message
-      }
+  if (resData.data?.message) {
+    return {
+      'error': resData.data.message
     }
+  }
 
-    return resData.data;
+  return resData.data;
 }
 
 
@@ -146,18 +177,18 @@ function prepareFetchDownloadresponseRequestObject(
   const url = `/api/${credentials!.platform}/download`;
   if (
     ['s3', 'gcloud'].includes(credentials!.platform)
-    ) {
-      return {
-          url,
-          bucketName: credentials!.bucketName,
-          objectName,
-      }
+  ) {
+    return {
+      url,
+      bucketName: credentials!.bucketName,
+      objectName,
+    }
   }
   else if (credentials!.platform === 'dropbox') {
-      return {
-        url,
-        objectName,
-      }
+    return {
+      url,
+      objectName,
+    }
   }
   else if (credentials!.platform === 'azure') {
     return {
@@ -181,23 +212,27 @@ export async function fetchUploadresponse(
   uploadPath: string
 ) {
 
-  const { url, formData} = prepareFetchUploadresponseRequestObject(
+  const { url, formData } = prepareFetchUploadresponseRequestObject(
     credentials,
     fileObject,
     uploadPath,
   )
-  const requestOptions = {
+  const requestOptions: RequestInit = {
     method: 'POST',
-    body: formData
+    body: formData,
+    headers: {
+      "X-CSRFToken": csrfToken
+
+    },
+    credentials: "include",
   }
 
-  console.log(requestOptions);
   const response = await fetch(url, requestOptions);
   const resData = await response.json();
   if (!response.ok) {
-      return {
-        'error': resData.message
-      }
+    return {
+      'error': resData.message
+    }
   }
 
   if (resData.data?.message) {
@@ -224,19 +259,19 @@ function prepareFetchUploadresponseRequestObject(
 
   if (
     ['s3', 'gcloud'].includes(credentials!.platform)
-    ) {
-      formData.append('bucketName', credentials!.bucketName);
-      return {
-          url,
-          bucketName: credentials!.bucketName,
-          formData,
-      }
+  ) {
+    formData.append('bucketName', credentials!.bucketName);
+    return {
+      url,
+      bucketName: credentials!.bucketName,
+      formData,
+    }
   }
   else if (credentials!.platform === 'dropbox') {
-      return {
-        url,
-        formData,
-      }
+    return {
+      url,
+      formData,
+    }
   }
   else if (credentials!.platform === 'azure') {
     formData.append('containerName', credentials!.containerName);

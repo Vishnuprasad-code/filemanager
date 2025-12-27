@@ -13,12 +13,11 @@ export function NotificationCard(
     }
 ) {
     useEffect(() => {
-        console.log('NotificationCard useEffect');
         const showTime = setTimeout(
-          () => setMessage(null), 5000);
-        
-            return () => clearTimeout(showTime);
-      });
+            () => setMessage(null), 1000 * 30);
+
+        return () => clearTimeout(showTime);
+    });
 
     return (
         <div className='notifiy-card'>

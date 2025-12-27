@@ -1,12 +1,14 @@
 import { useState } from 'react'
 import { useContext } from 'react';
 
-import { CredentialsContextType,
+import {
+    CredentialsContextType,
     ListPanelContextType, fileListRowObject,
     uploadObjectType
 } from '../Types/types.tsx'
- import { CredentialsContext,
-     ListPanelContext
+import {
+    CredentialsContext,
+    ListPanelContext
 } from '../Contexts/contexts.tsx'
 
 import { fetchDownloadresponse, fetchUploadresponse } from '../Http/http.ts';
@@ -16,9 +18,9 @@ import { LoadingSpinner } from './LoadingSpinner.tsx'
 
 import "./FileListings.css";
 
-export function FileListings(){
+export function FileListings() {
     const { credentials, setMessage } = useContext<CredentialsContextType>(CredentialsContext);
-    const { 
+    const {
         searchPath,
         isFetching,
         fileList,
@@ -43,7 +45,7 @@ export function FileListings(){
             objectName.replace(/^\/+|\/+$/g, '')
         )
 
-        if (responseData.error){
+        if (responseData.error) {
             setMessage(responseData.error);
             return
         }
@@ -69,12 +71,12 @@ export function FileListings(){
     const handleDragEnter = (e: React.DragEvent) => {
         e.preventDefault();
     };
-    
+
     const handleDragLeave = (e: React.DragEvent) => {
         e.preventDefault();
         // setDragging(false);
     };
-    
+
     const handleDragOver = (e: React.DragEvent) => {
         e.preventDefault();
     };
@@ -83,10 +85,9 @@ export function FileListings(){
     //     return new Promise(resolve => setTimeout(resolve, ms));
     // }
 
-    async function handleUploadConfirmation(event:  React.DragEvent) {
+    async function handleUploadConfirmation(event: React.DragEvent) {
         event.preventDefault();
 
-        console.log('handleUploadConfirmation:');
         const droppedItems = [...event.dataTransfer.items];
         if (droppedItems[0].webkitGetAsEntry()!.isDirectory) {
             setMessage("Cannot upload a directory! Drop a file instead.")
@@ -113,8 +114,7 @@ export function FileListings(){
             fileObject,
             uploadPath.replace(/^\/+|\/+$/g, '')
         )
-        console.log(responseData);
-        if (responseData.error){
+        if (responseData.error) {
             setMessage(responseData.error)
             setIsUploading(false);
             return
@@ -126,10 +126,8 @@ export function FileListings(){
     }
 
     let listingContentToRender;
-    console.log('isFetching || isUploading');
-    console.log(isFetching, isUploading);
-    if (isFetching || isUploading){
-        listingContentToRender = <LoadingSpinner/>
+    if (isFetching || isUploading) {
+        listingContentToRender = <LoadingSpinner />
     }
     else {
         listingContentToRender = fileList.map((row, rowIndex) => (
@@ -137,54 +135,54 @@ export function FileListings(){
                 <li className="listing-cell-item listing-cell-type">{row.type}</li>
                 {
                     row.type === 'File'
-                    ?
-                    <li className="listing-cell-item listing-cell-name">{row.fileName}</li>
-                    :
-                    <li
-                        className="listing-cell-item listing-cell-name"
-                        onClick={() => handleTraverse(row)}>
+                        ?
+                        <li className="listing-cell-item listing-cell-name">{row.fileName}</li>
+                        :
+                        <li
+                            className="listing-cell-item listing-cell-name"
+                            onClick={() => handleTraverse(row)}>
                             {row.fileName}
-                    </li>
+                        </li>
                 }
                 <li className="listing-cell-item listing-cell-file-size">{row.displaySize}</li>
                 <li className="listing-cell-item listing-cell-last-modified">{row.lastModified}</li>
                 {
                     row.type === 'File'
-                    ?
-                    <li className="listing-cell-item listing-cell-download">
-                        <img
-                            src="downloaded-symbol-svgrepo-com.svg"
-                            alt="!"
-                            onClick={() => handleDownload(row)}
-                        />
-                    </li>
-                    :
-                    <li className="listing-cell-item listing-cell-dummy"></li>
+                        ?
+                        <li className="listing-cell-item listing-cell-download">
+                            <img
+                                src="downloaded-symbol-svgrepo-com.svg"
+                                alt="!"
+                                onClick={() => handleDownload(row)}
+                            />
+                        </li>
+                        :
+                        <li className="listing-cell-item listing-cell-dummy"></li>
                 }
             </ul>
-            ))
+        ))
     }
 
     return (
         <>
-        <Modal isModalOpen={uploadObject.isModalOpen}>
-            <UploadPopup
-                uploadObject={uploadObject}
-                setUploadObject={setUploadObject}
-                searchPath={searchPath}
-                onConfirm={handleUpload} />
-        </Modal>
-        <div
-            id="listing-panel"
-            onDragEnter={handleDragEnter}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleUploadConfirmation}
-        >
-            <ListingHeaderRow />
-            { listingContentToRender }
+            <Modal isModalOpen={uploadObject.isModalOpen}>
+                <UploadPopup
+                    uploadObject={uploadObject}
+                    setUploadObject={setUploadObject}
+                    searchPath={searchPath}
+                    onConfirm={handleUpload} />
+            </Modal>
+            <div
+                id="listing-panel"
+                onDragEnter={handleDragEnter}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleUploadConfirmation}
+            >
+                <ListingHeaderRow />
+                {listingContentToRender}
 
-        </div>
+            </div>
         </>
     )
 }
@@ -192,22 +190,22 @@ export function FileListings(){
 
 function ListingHeaderRow() {
     return (
-    <div className="listing-header">
-        <div className="listing-header-item listing-cell-type">
-            Type
+        <div className="listing-header">
+            <div className="listing-header-item listing-cell-type">
+                Type
+            </div>
+            <div className="listing-header-item listing-cell-name">
+                Name
+            </div>
+            <div className="listing-header-item listing-cell-file-size">
+                File Size
+            </div>
+            <div className="listing-header-item listing-cell-last-modified">
+                Last Modified
+            </div>
+            <div className="listing-header-item listing-cell-download">
+                Download
+            </div>
         </div>
-        <div className="listing-header-item listing-cell-name">
-            Name
-        </div>
-        <div className="listing-header-item listing-cell-file-size">
-            File Size
-        </div>
-        <div className="listing-header-item listing-cell-last-modified">
-            Last Modified
-        </div>
-        <div className="listing-header-item listing-cell-download">
-            Download
-        </div>
-    </div>
     )
 }

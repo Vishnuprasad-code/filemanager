@@ -1,16 +1,16 @@
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 
-import { 
+import {
   S3CredentialComponent,
   DropBoxCredentialComponent,
   GcloudCredentialComponent,
   AzureCredentialComponent,
- } from '../Components/CredentialComponent.tsx'
+} from '../Components/CredentialComponent.tsx'
 import { ListPanel } from '../Components/ListPanel.tsx'
 import { NotificationCard } from '../Components/NotificationCard.tsx'
 
-import { fetchConnectData } from '../Http/http.ts'
+import { fetchConnectData, fetchCSRFToken } from '../Http/http.ts'
 import { credentialsObject } from '../Types/types.tsx'
 
 import { CredentialsContext } from '../Contexts/contexts.tsx'
@@ -22,29 +22,28 @@ export default function MainPage() {
   const [connecting, setConnecting] = useState<boolean>(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  console.log(credentials);
-  async function handleConnect(event: React.FormEvent){
+  async function handleConnect(event: React.FormEvent) {
     event.preventDefault();
 
     const inputCredentialsFormObject = new FormData(event.target as HTMLFormElement);
     const inputCredentials: credentialsObject = Object.fromEntries(
       inputCredentialsFormObject.entries()
-      ) as unknown as credentialsObject;
-    console.log(inputCredentials);
+    ) as unknown as credentialsObject;
 
     setConnecting(true);
 
     // const url = '/api/s3/connect'
+    await fetchCSRFToken();
     const url = `/api/${params.platform}/connect`
     const resData = await fetchConnectData(url, inputCredentials)
-    if (resData.error){
+    if (resData.error) {
       setMessage(resData.error);
       setConnecting(false);
       return
     }
-    
+
     setCredentials(resData)
-  
+
     setConnecting(false);
   }
 
@@ -53,19 +52,18 @@ export default function MainPage() {
     'setMessage': setMessage,
   }
 
-  console.log(params.platform);
   let platformToUse;
-  if (params.platform === 's3') platformToUse = <S3CredentialComponent connecting={connecting} onConnect={handleConnect}/>
-  else if (params.platform === 'dropbox') platformToUse = <DropBoxCredentialComponent connecting={connecting} onConnect={handleConnect}/>
-  else if (params.platform === 'gcloud') platformToUse = <GcloudCredentialComponent connecting={connecting} onConnect={handleConnect}/>
-  else if (params.platform === 'azure') platformToUse = <AzureCredentialComponent connecting={connecting} onConnect={handleConnect}/>
+  if (params.platform === 's3') platformToUse = <S3CredentialComponent connecting={connecting} onConnect={handleConnect} />
+  else if (params.platform === 'dropbox') platformToUse = <DropBoxCredentialComponent connecting={connecting} onConnect={handleConnect} />
+  else if (params.platform === 'gcloud') platformToUse = <GcloudCredentialComponent connecting={connecting} onConnect={handleConnect} />
+  else if (params.platform === 'azure') platformToUse = <AzureCredentialComponent connecting={connecting} onConnect={handleConnect} />
 
   return (
     <CredentialsContext.Provider value={credentialCtxValue}>
-      {(message) && <NotificationCard message={message} setMessage={setMessage}/>}
+      {(message) && <NotificationCard message={message} setMessage={setMessage} />}
       <div className="container">
-        { platformToUse }
-        { credentials?.platform && <ListPanel/> }
+        {platformToUse}
+        {credentials?.platform && <ListPanel />}
       </div>
     </CredentialsContext.Provider>
   )
