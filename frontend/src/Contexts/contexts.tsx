@@ -2,12 +2,13 @@ import { createContext } from 'react';
 import { CredentialsContextType, ListPanelContextType } from '../Types/types.tsx'
 
 
-export const CredentialsContext= createContext<CredentialsContextType>({
-    'credentials': {}
+export const CredentialsContext = createContext<CredentialsContextType>({
+    'credentials': {},
+    'setMessage': () => null,
 });
 
 
-export const ListPanelContext= createContext<ListPanelContextType>({
+export const ListPanelContext = createContext<ListPanelContextType>({
     'isFetching': false,
     'searchPath': '',
     'fileList': [],

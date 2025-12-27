@@ -1,11 +1,11 @@
 import { useState, useContext, useEffect } from 'react'
 
-import { 
+import {
     CredentialsContext,
     ListPanelContext
 
 } from '../Contexts/contexts.tsx'
-import { CredentialsContextType, credentialsObject } from '../Types/types.tsx'
+import { CredentialsContextType } from '../Types/types.tsx'
 
 
 import { fetchFilePaths } from '../Http/http.ts';
@@ -26,22 +26,22 @@ export function ListPanel(
         setFileList([]);
         setSearchPath('');
         setIsFetching(false);
-      }, [credentials]);
+    }, [credentials]);
 
     // function sleep(ms: number){
     //     return new Promise(resolve => setTimeout(resolve, ms));
     // }
 
-    async function onSearch(directory: string){
+    async function onSearch(directory: string) {
         console.log('Go Clicked', credentials);
         setIsFetching(true);
 
         const newSearchPath = directory.replace(/^\/+|\/+$/g, '')
         const responseData = await fetchFilePaths(
-                credentials!,
-                newSearchPath
-            )
-        if (responseData.error){
+            credentials!,
+            newSearchPath
+        )
+        if (responseData.error) {
             setMessage(responseData.error);
             setIsFetching(false);
             return
@@ -66,8 +66,8 @@ export function ListPanel(
 
     return (
         <ListPanelContext.Provider value={ListPanelCtxValue}>
-            <FilePathSearchBar/>
-            <FileListings/>
+            <FilePathSearchBar />
+            <FileListings />
         </ListPanelContext.Provider>
     )
 };
